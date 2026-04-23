@@ -17,10 +17,10 @@ git clone git@github.com:<your-org>/engineering-standards.git ~/engineering-stan
 mkdir -p ~/.claude/commands
 
 # 3. Symlink all skills
-ln -s ~/github/engineering-standards/skills/clean-review.md       ~/.claude/commands/clean-review.md
-ln -s ~/github/engineering-standards/skills/apply-pattern.md      ~/.claude/commands/apply-pattern.md
-ln -s ~/github/engineering-standards/skills/architecture-check.md ~/.claude/commands/architecture-check.md
-ln -s ~/github/engineering-standards/skills/refactor.md           ~/.claude/commands/refactor.md
+ln -s ~/engineering-standards/skills/clean-review.md       ~/.claude/commands/clean-review.md
+ln -s ~/engineering-standards/skills/apply-pattern.md      ~/.claude/commands/apply-pattern.md
+ln -s ~/engineering-standards/skills/architecture-check.md ~/.claude/commands/architecture-check.md
+ln -s ~/engineering-standards/skills/refactor.md           ~/.claude/commands/refactor.md
 
 # 4. Verify
 ls -la ~/.claude/commands/

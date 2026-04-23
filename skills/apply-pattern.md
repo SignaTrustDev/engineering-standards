@@ -21,8 +21,8 @@ Apply a named GoF design pattern to the current file or selection.
        `observer`, `state`, `strategy`, `template-method`, `visitor`
 
 2. **Read the pattern file**
-   - Load `~/engineering-standards/patterns/<category>/<pattern-name>.md`
-   - Study the Intent, When to Use, When NOT to Use, Structure, and the ✅ With the Pattern example
+   - Load `patterns/<category>/<pattern-name>.md`
+   - Study Intent, When to Use, When NOT to Use, Structure, and ✅ example
 
 3. **Read the target file**
 
