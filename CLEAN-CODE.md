@@ -1,6 +1,6 @@
 # Clean Code Standards (Robert C. Martin)
 
-Rules for writing clean code, organized by chapter. Page references are to *Clean Code* (Martin, 2008).
+Rules for writing clean code, distilled from *Clean Code* (Martin, 2008).
 
 > **How to use this file when reviewing code**
 > Scan top-to-bottom. Each rule has a one-line summary. If code violates the
@@ -16,193 +16,169 @@ Rules for writing clean code, organized by chapter. Page references are to *Clea
 
 ---
 
-## Chapter 1 — Clean Code
+## Rules
 
-### 1. Boy Scout Rule — leave code cleaner than you found it *(p. 14)*
+### 1. Boy Scout Rule — leave code cleaner than you found it
 
 Remove dead code, fix obvious naming, add missing type hints when you touch a file.
 
 ---
 
-## Chapter 2 — Meaningful Names
-
-### 2. Use descriptive, unambiguous names *(p. 18)*
+### 2. Use descriptive, unambiguous names
 
 Names must communicate intent without requiring the reader to look elsewhere.
 
 ---
 
-### 3. Use pronounceable names *(p. 21)*
+### 3. Use pronounceable names
 
 If you can't say a name aloud, you can't discuss it with colleagues.
 
 ---
 
-### 4. Use searchable names — avoid magic numbers *(p. 22)*
+### 4. Use searchable names — avoid magic numbers
 
 A bare literal gives grep nothing to find and the reader nothing to understand.
 
 ---
 
-### 5. Avoid encodings and type noise *(p. 23)*
+### 5. Avoid encodings and type noise
 
 Type prefixes (`str_`, `lst_`, `i`) are redundant when the type system already knows.
 
 ---
 
-### 6. Be consistent — same pattern everywhere *(p. 26)*
+### 6. Be consistent — same pattern everywhere
 
 Choose one style for a concept and use it everywhere. Mixed conventions force readers to decode instead of read.
 
 ---
 
-## Chapter 3 — Functions
-
-### 7. Functions should be small and do ONE thing *(p. 35)*
+### 7. Functions should be small and do ONE thing
 
 If you can extract another function from a function with a name that is not merely a restatement of its implementation, the function is doing more than one thing.
 
 ---
 
-### 8. One level of abstraction per function *(p. 36)*
+### 8. One level of abstraction per function
 
 All statements inside a function must sit at the same conceptual level. Mixing high-level intent with low-level detail makes readers unable to tell what is essential and what is noise.
 
 ---
 
-### 9. Stepdown Rule — file reads top-to-bottom at decreasing abstraction levels *(p. 37)*
+### 9. Stepdown Rule — file reads top-to-bottom at decreasing abstraction levels
 
 Every function is followed by those at the next level of abstraction. The top-level function names each step as plain English; sub-functions contain the implementation detail. A reader understands the full flow without reading any sub-function body.
 
 ---
 
-### 10. Prefer fewer arguments — use parameter objects when needed *(p. 40)*
+### 10. Prefer fewer arguments — use parameter objects when needed
 
 Functions with four or more arguments are hard to call correctly. Group related arguments into a typed object.
 
 ---
 
-### 11. Don't use flag arguments — split into separate functions *(p. 41)*
+### 11. Don't use flag arguments — split into separate functions
 
 A boolean argument loudly declares that the function does more than one thing.
 
 ---
 
-### 12. No side effects — a function should do what its name says and nothing else *(p. 44)*
+### 12. No side effects — a function should do what its name says and nothing else
 
 A function named `get_user` must not also write to the database. Hidden mutations destroy trust in function names.
 
 ---
 
-## Chapter 4 — Comments
-
-### 13. Explain yourself in code, not in comments *(p. 55)*
+### 13. Explain yourself in code, not in comments
 
 If you need a comment to explain what the code does, rename it or extract a function.
 
 ---
 
-### 14. Use comments to explain INTENT, WARNINGS, and non-obvious decisions *(p. 55)*
+### 14. Use comments to explain INTENT, WARNINGS, and non-obvious decisions
 
 The only good comments are ones that explain *why* — hidden constraints, performance trade-offs, or safety warnings that the code itself cannot express.
 
 ---
 
-### 15. Never comment out dead code — delete it *(p. 68)*
+### 15. Never comment out dead code — delete it
 
 Commented-out code rots: it calls functions that no longer exist, uses names that have changed, and distracts every reader. Source control remembers everything.
 
 ---
 
-## Chapter 5 — Formatting
-
-### 16. Declare variables close to their usage *(p. 80)*
+### 16. Declare variables close to their usage
 
 A variable declared 30 lines before its first use forces readers to scroll and remember. Declare it just above its first use.
 
 ---
 
-### 17. Place caller above callee — high-level first *(p. 84)*
+### 17. Place caller above callee — high-level first
 
 Source files should read like a newspaper: headline at the top, detail below. Every function should appear above the functions it calls.
 
 ---
 
-## Chapter 6 — Objects and Data Structures
-
-### 18. Hide internal structure — expose behavior, not data *(p. 93)*
+### 18. Hide internal structure — expose behavior, not data
 
 Objects hide their data behind abstractions and expose functions that operate on that data. Exposing raw fields lets callers bypass invariants.
 
 ---
 
-### 19. Follow the Law of Demeter — talk only to direct neighbors *(p. 97)*
+### 19. Follow the Law of Demeter — talk only to direct neighbors
 
 A function should only call methods on: itself, its parameters, any objects it creates, and its direct component objects. Train-wrecks (`a.b().c().d()`) expose internal structure and create brittle coupling.
 
 ---
 
-## Chapter 7 — Error Handling
-
-### 20. Always find the root cause — don't suppress errors silently *(p. 103)*
+### 20. Always find the root cause — don't suppress errors silently
 
 Swallowing an exception hides failures. Callers cannot distinguish "record not found" from "database is down".
 
 ---
 
-## Chapter 9 — Unit Tests
-
-### 21. One logical assertion per test *(p. 130)*
+### 21. One logical assertion per test
 
 Testing multiple concepts in one test hides which concept failed. One concept per test makes failures self-diagnosing.
 
 ---
 
-### 22. Fast — tests should run in milliseconds; no real I/O *(F.I.R.S.T., p. 132)*
+### 22. Fast — tests should run in milliseconds; no real I/O *(F.I.R.S.T.)*
 
 Slow tests don't get run. No real databases, no real HTTP, no real files.
 
 ---
 
-### 23. Independent — tests must not depend on each other *(F.I.R.S.T., p. 132)*
+### 23. Independent — tests must not depend on each other *(F.I.R.S.T.)*
 
 Each test must set up its own state. Shared state causes cascade failures that are hard to diagnose.
 
 ---
 
-### 24. Readable — test names describe behavior, not implementation *(F.I.R.S.T., p. 132)*
+### 24. Readable — test names describe behavior, not implementation *(F.I.R.S.T.)*
 
 Test names are documentation. Name them so the failure message tells you what broke.
 
 ---
 
-## Chapter 10 — Classes
-
-### 25. Single Responsibility — classes should have one reason to change *(p. 138)*
+### 25. Single Responsibility — classes should have one reason to change
 
 If a class handles persistence, notifications, and validation, then any one of those three domains can force it to change.
 
 ---
 
-## Chapter 11 — Systems
-
-### 26. Use dependency injection — don't instantiate collaborators inside classes *(p. 154)*
+### 26. Use dependency injection — don't instantiate collaborators inside classes
 
 Hard-coding `new ConcreteRepo()` inside a class couples it to that implementation and makes tests impossible without the real database.
 
 ---
 
-## Chapter 13 — Concurrency
-
-### 27. Separate multi-threading / async code from business logic *(p. 177)*
+### 27. Separate multi-threading / async code from business logic
 
 Business logic must be testable without concurrency infrastructure. Keep locks and queues in a thin wrapper layer.
 
 ---
-
-## Additional Principles
-
-*(Not tied to a single chapter; applied throughout the book.)*
 
 ### 28. Keep it simple (KISS) — reduce complexity
 
@@ -250,7 +226,7 @@ Boolean flags multiply ambiguous states. Discriminated unions make every state e
 
 ---
 
-## Chapter 17 — Smells and Heuristics (Reference)
+## Smells and Heuristics (Reference)
 
 A complete list of Martin's named smells and heuristics. Rules with full examples above are cross-referenced. Use this list as a final checklist when reviewing a file.
 
@@ -346,24 +322,3 @@ A complete list of Martin's named smells and heuristics. Rules with full example
 | T7 | Patterns of Failure Are Revealing — tests that fail together hint at a shared cause | Read the pattern; don't just fix individual failures |
 | T8 | Test Coverage Patterns Can Be Revealing — untested lines that are always executed together | Consider extracting a unit |
 | T9 | Tests Should Be Fast | See **Rule 22** |
-
----
-
-## Summary Checklist
-
-Before committing, verify:
-
-- [ ] Names are descriptive — no abbreviations, no magic numbers
-- [ ] Functions do ONE thing and are under ~20 lines
-- [ ] All statements in a function are at the same level of abstraction
-- [ ] File reads top-to-bottom: caller appears above callee (Stepdown Rule)
-- [ ] No flag arguments (split into separate functions)
-- [ ] No side effects that aren't obvious from the function name
-- [ ] No commented-out code
-- [ ] No deeply nested conditionals (use guard clauses)
-- [ ] No duplication (DRY)
-- [ ] Configurable values are constants at the top, not buried inline
-- [ ] Tests are fast, independent, and named after behavior
-- [ ] Classes have a single reason to change (SRP)
-- [ ] Dependencies are injected, not instantiated inside classes
-- [ ] No `any` in TypeScript without an explicit suppression comment explaining why
