@@ -40,7 +40,7 @@ Review a file against the full engineering standards suite.
 
 
 1. GoF pattern opportunities and misuses
-2. All 40 CLEAN-CODE.md rules (function size, naming, single responsibility, etc.)
+2. All 32 CLEAN-CODE.md rules (function size, naming, single responsibility, etc.)
 3. Clean Architecture layer boundary violations (Dependency Rule)
 
 

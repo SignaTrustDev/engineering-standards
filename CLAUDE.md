@@ -128,7 +128,7 @@ Install with: `ln -s ~/engineering-standards/skills/<name>.md ~/.claude/commands
 
 | Skill | Command | Purpose |
 |---|---|---|
-| `skills/clean-review.md` | `/clean-review` | Check a file against all 40 CLEAN-CODE rules + flag pattern opportunities |
+| `skills/clean-review.md` | `/clean-review` | Check a file against all 32 CLEAN-CODE rules + flag pattern opportunities |
 | `skills/apply-pattern.md` | `/apply-pattern <name>` | Apply a named GoF pattern to the current file or selection |
 | `skills/architecture-check.md` | `/architecture-check` | Verify the file respects Clean Architecture layer boundaries |
 | `skills/refactor.md` | `/refactor` | Full refactor pass: patterns + clean code + architecture |

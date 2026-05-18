@@ -278,7 +278,7 @@ A complete list of Martin's named smells and heuristics. Rules with full example
 | G32 | Don't Be Arbitrary — code structure that has no apparent reason | Document the reason or restructure |
 | G33 | Encapsulate Boundary Conditions — `+1` and `-1` scattered everywhere | Wrap boundary arithmetic in a named function or constant |
 | G34 | Functions Should Descend Only One Level of Abstraction | See **Rule 8** (One Level of Abstraction) |
-| G35 | Keep Configurable Data at High Levels | See **Rule 35** |
+| G35 | Keep Configurable Data at High Levels | Hoist magic values and defaults to named constants at the top level |
 | G36 | Avoid Transitive Navigation (Train Wrecks) — `a.getB().getC()` | See **Rule 19** (Law of Demeter) |
 
 ### Names
