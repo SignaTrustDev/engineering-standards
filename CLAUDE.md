@@ -18,7 +18,9 @@ repository is **referenced from a project's CLAUDE.md**.
 
 ### Standards File Rules
 
-- `CLEAN-CODE.md` — do not change rule numbering; each rule must have Python + TypeScript bad/good examples
+- `CLEAN-CODE.md` — do not change rule numbering; keeps rule text only. Code examples live in
+  `examples/clean-code/py.md` and `examples/clean-code/ts.md`, keyed by rule number (`## Rule N`).
+  When you add or change a rule, update the matching `## Rule N` section in both example files.
 - `CLEAN-ARCHITECTURE.md` — keep SOLID examples in both languages; layer diagram must stay intact
 
 ### Adding a New Pattern
