@@ -18,8 +18,13 @@ repository is **referenced from a project's CLAUDE.md**.
 
 ### Standards File Rules
 
-- `CLEAN-CODE.md` — do not change rule numbering; each rule must have Python + TypeScript bad/good examples
-- `CLEAN-ARCHITECTURE.md` — keep SOLID examples in both languages; layer diagram must stay intact
+- `CLEAN-CODE.md` — do not change rule numbering; keeps rule text only. Code examples live in
+  `examples/clean-code/py.md` and `examples/clean-code/ts.md`, keyed by rule number (`## Rule N`).
+  When you add or change a rule, update the matching `## Rule N` section in both example files.
+- `CLEAN-ARCHITECTURE.md` — layer diagram must stay intact. Each SOLID principle has a Python
+  example inline; the TypeScript equivalents live in `examples/clean-architecture/ts.md`, keyed by
+  principle letter (`## S`, `## O`, …). When you add or change a principle, update both the inline
+  Python example and the TypeScript file.
 
 ### Adding a New Pattern
 
@@ -126,7 +131,7 @@ Install with: `ln -s ~/engineering-standards/skills/<name>.md ~/.claude/commands
 
 | Skill | Command | Purpose |
 |---|---|---|
-| `skills/clean-review.md` | `/clean-review` | Check a file against all 40 CLEAN-CODE rules + flag pattern opportunities |
+| `skills/clean-review.md` | `/clean-review` | Check a file against all 32 CLEAN-CODE rules + flag pattern opportunities |
 | `skills/apply-pattern.md` | `/apply-pattern <name>` | Apply a named GoF pattern to the current file or selection |
 | `skills/architecture-check.md` | `/architecture-check` | Verify the file respects Clean Architecture layer boundaries |
 | `skills/refactor.md` | `/refactor` | Full refactor pass: patterns + clean code + architecture |

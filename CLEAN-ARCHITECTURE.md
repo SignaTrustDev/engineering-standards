@@ -1,18 +1,126 @@
-# Clean Architecture Rules — Extracted from Robert C. Martin
+# Clean Architecture Rules
 
-## Core Goal
-
-> "The goal of software architecture is to minimize the human resources required to build and maintain the required system."
+Enforceable architecture rules — each one can be checked against concrete code.
 
 ---
 
 ## The Dependency Rule
 
-**The most important rule in the book:**
+> Source code dependencies must point only inward, toward higher-level policy
 
-- Source code dependencies must **point only inward**, toward higher-level policies
-- Nothing in an inner circle can know anything about something in an outer circle
-- Layers from outside-in: Frameworks/Drivers → Interface Adapters → Use Cases → Entities
+The four layers run from Entities (innermost, most stable) outward to
+Frameworks/Drivers (outermost, most volatile). An inner layer must know nothing
+about any outer layer.
+
+```text
+Entities          ← Enterprise Business Rules (most stable)
+Use Cases         ← Application Business Rules
+Interface Adapters← Controllers, Presenters, Gateways
+Frameworks/Drivers← Web, DB, UI (most volatile)
+```
+
+**How to classify a module** (needed for the detection signal below):
+
+- **Entities** — domain types and business rules; import no other layer
+- **Use Cases** — application workflows; import Entities only
+- **Interface Adapters** — controllers, presenters, gateways, ORM models
+- **Frameworks/Drivers** — web framework, DB driver, UI code
+
+**Detection signal:** classify each module into a layer, then inspect its
+imports. A violation is any `import` edge pointing from an inner layer to an
+outer layer.
+
+- `entities/` importing anything in `use_cases/`, `adapters/`, or `frameworks/`
+- `use_cases/` importing `adapters/` or `frameworks/`
+- A framework type (ORM model, HTTP request, UI widget) referenced inside an
+  entity or use case
+
+**Fix:** invert the dependency (DIP) — declare an interface in the inner layer
+and have the outer layer implement it — or move the misplaced code to the layer
+it belongs in.
+
+**Example — all four layers, every import pointing inward:**
+
+```python
+# ═══ entities/order.py ─ innermost layer; imports NO other layer ═══
+from dataclasses import dataclass
+
+@dataclass
+class Order:
+    id: str
+    total: float
+
+    def is_free(self) -> bool:        # enterprise business rule
+        return self.total == 0
+
+
+# ═══ use_cases/place_order.py ─ imports Entities only ═══
+from typing import Protocol
+from entities.order import Order
+
+class OrderRepository(Protocol):      # abstraction defined in the INNER layer
+    def save(self, order: Order) -> None: ...
+
+class PlaceOrder:
+    def __init__(self, repo: OrderRepository) -> None:
+        self._repo = repo
+
+    def execute(self, order: Order) -> None:
+        self._repo.save(order)
+
+
+# ═══ interface_adapters/order.py ─ imports Use Cases + Entities (inward) ═══
+from entities.order import Order
+from use_cases.place_order import OrderRepository, PlaceOrder
+
+class SqlOrderRepository(OrderRepository):   # implements the inward abstraction
+    def __init__(self, connection) -> None:  # driver is INJECTED, not imported
+        self._conn = connection
+
+    def save(self, order: Order) -> None:
+        self._conn.execute(
+            "INSERT INTO orders (id, total) VALUES (?, ?)", order.id, order.total)
+
+class OrderController:
+    def __init__(self, place_order: PlaceOrder) -> None:
+        self._place_order = place_order
+
+    def handle(self, body: dict) -> None:
+        self._place_order.execute(Order(id=body["id"], total=body["total"]))
+
+
+# ═══ frameworks_drivers/main.py ─ outermost; imports EVERYTHING inward ═══
+import sqlite3
+from interface_adapters.order import SqlOrderRepository, OrderController
+from use_cases.place_order import PlaceOrder
+
+connection = sqlite3.connect("orders.db")          # the DB driver — a detail
+controller = OrderController(PlaceOrder(SqlOrderRepository(connection)))
+# app.post("/orders", lambda req: controller.handle(req.json))  # web — a detail
+```
+
+Two things to notice:
+
+- **DIP twist** — `SqlOrderRepository` (Interface Adapters) implements
+  `OrderRepository`, an abstraction *defined in* `use_cases`. The SQL detail
+  depends inward on the use case's interface; the use case never knows SQL
+  exists.
+- **No inner → outer import** — the repository never imports the `sqlite3`
+  driver. The composition root in `frameworks_drivers/` creates the connection
+  and injects it, keeping the adapter from reaching outward.
+
+**Enforcement:**
+
+- If a change you are making would *introduce* an inner → outer import,
+  restructure before finishing — never commit one.
+- For a *pre-existing* violation you encounter: refactor it if it touches files
+  or modules already in scope for the current task; otherwise add a
+  `TODO [ARCH:dependency-rule]` comment and surface it to the user.
+
+**Relationship to ADP:** the Dependency Rule constrains edge *direction* against
+the layer hierarchy; ADP constrains the *shape* of the whole graph (no cycles).
+Obeying the Dependency Rule rules out inter-layer cycles, but not intra-layer
+cycles — the two checks are complementary, not redundant.
 
 ---
 
@@ -26,67 +134,69 @@
 | **ISP** | Don't depend on things you don't use |
 | **DIP** | Source code dependencies should refer only to abstractions, not concretions |
 
+> **TypeScript examples**
+> Each principle below shows a Python example inline. The equivalent TypeScript
+> examples live in
+> [`examples/clean-architecture/ts.md`](examples/clean-architecture/ts.md),
+> keyed by principle letter.
+
+**Enforcement (applies to all five principles):** each principle pairs a
+❌ BAD pattern with a ✅ GOOD pattern. When you see the BAD pattern:
+
+- Replace it with the GOOD pattern if it touches files or modules already in
+  scope for the current task.
+- Otherwise add a `TODO [SOLID:<letter>]` comment (e.g. `TODO [SOLID:D]`) naming
+  the principle, and surface it to the user.
+
+Never write new code that matches a BAD pattern.
+
 ### S — Single Responsibility Principle
 
 > One module, one actor (one reason to change)
 
-**Bad (Python):**
+**Detection signal:** a class with methods spanning multiple concerns —
+persistence (`save`/`load`), notification (`send_email`), reporting, validation
+— so more than one actor could force it to change.
+
+**Fix:** split into one class per concern (domain model, repository, notifier,
+validator).
 
 ```python
+# ❌ BAD — one class, three reasons to change
 class User:
-    def save_to_db(self): ...        # persistence concern
+    def save_to_db(self): ...         # persistence concern
     def send_welcome_email(self): ... # notification concern
-    def generate_report(self): ...   # reporting concern
-```
+    def generate_report(self): ...    # reporting concern
 
-**Good (Python):**
+# ✅ GOOD — one actor per class
+class User: ...                       # just the domain model
 
-```python
-class User: ...                   # just the domain model
 class UserRepository:
     def save(self, user: User): ...
+
 class UserNotifier:
     def send_welcome(self, user: User): ...
-```
-
-**Bad (TypeScript):**
-
-```typescript
-class User {
-  saveToDb() { ... }        // persistence concern
-  sendWelcomeEmail() { ... } // notification concern
-  generateReport() { ... }  // reporting concern
-}
-```
-
-**Good (TypeScript):**
-
-```typescript
-class User { ... }           // just the domain model
-class UserRepository {
-  save(user: User): void { ... }
-}
-class UserNotifier {
-  sendWelcome(user: User): void { ... }
-}
 ```
 
 ### O — Open/Closed Principle
 
 > Open for extension, closed for modification
 
-**Bad (Python):**
+**Detection signal:** an `if`/`elif` chain or `switch` dispatching on a type
+string or enum to choose behavior, where adding a new case means editing the
+function.
+
+**Fix:** introduce a polymorphic abstraction (abstract base / Strategy); each
+case becomes its own class, so new cases add code instead of editing it.
 
 ```python
+# ❌ BAD — must edit this function to add a new customer type
 def get_discount(customer_type: str) -> float:
     if customer_type == 'vip': return 0.2
     if customer_type == 'member': return 0.1
-    return 0.0  # must edit this function to add new types
-```
+    return 0.0
 
-**Good (Python):**
-
-```python
+# ✅ GOOD — new customer types = new classes, no edits to existing code
 from abc import ABC, abstractmethod
 
 class DiscountStrategy(ABC):
@@ -98,55 +208,31 @@ class VipDiscount(DiscountStrategy):
 
 class MemberDiscount(DiscountStrategy):
     def calculate(self) -> float: return 0.1
-
-# New customer types = new classes, no edits to existing code
-```
-
-**Bad (TypeScript):**
-
-```typescript
-function getDiscount(customerType: string): number {
-  if (customerType === 'vip') return 0.2;
-  if (customerType === 'member') return 0.1;
-  return 0; // must edit this function to add new types
-}
-```
-
-**Good (TypeScript):**
-
-```typescript
-interface DiscountStrategy {
-  calculate(): number;
-}
-class VipDiscount implements DiscountStrategy {
-  calculate() { return 0.2; }
-}
-class MemberDiscount implements DiscountStrategy {
-  calculate() { return 0.1; }
-}
-// New customer types = new classes, no edits to existing code
 ```
 
 ### L — Liskov Substitution Principle
 
 > Subtypes must be substitutable for their base types
 
-**Bad (Python):**
+**Detection signal:** a subclass that overrides a base method to raise
+`NotImplementedError`, reject inputs the base accepts, or change behavior that
+callers of the base type rely on.
+
+**Fix:** drop the inheritance; make the types siblings under a shared
+abstraction. Don't subclass purely to reuse code.
 
 ```python
+# ❌ BAD — Square.set_width gives callers of Rectangle surprising behavior
 class Rectangle:
     def set_width(self, w): self.width = w
     def set_height(self, h): self.height = h
     def area(self): return self.width * self.height
 
 class Square(Rectangle):
-    def set_width(self, w):           # breaks LSP — callers of Rectangle
-        self.width = self.height = w  # get surprising behavior
-```
+    def set_width(self, w):           # breaks LSP
+        self.width = self.height = w
 
-**Good (Python):**
-
-```python
+# ✅ GOOD — siblings under a shared abstraction, no broken inheritance
 class Shape(ABC):
     @abstractmethod
     def area(self) -> float: ...
@@ -160,42 +246,19 @@ class Square(Shape):
     def area(self): return self.s ** 2
 ```
 
-**Bad (TypeScript):**
-
-```typescript
-class Rectangle {
-  setWidth(w: number) { this.width = w; }
-  setHeight(h: number) { this.height = h; }
-  area() { return this.width * this.height; }
-}
-class Square extends Rectangle {
-  setWidth(w: number) { this.width = this.height = w; } // breaks LSP
-}
-```
-
-**Good (TypeScript):**
-
-```typescript
-abstract class Shape {
-  abstract area(): number;
-}
-class Rectangle extends Shape {
-  constructor(private w: number, private h: number) { super(); }
-  area() { return this.w * this.h; }
-}
-class Square extends Shape {
-  constructor(private s: number) { super(); }
-  area() { return this.s ** 2; }
-}
-```
-
 ### I — Interface Segregation Principle
 
 > Don't depend on things you don't use
 
-**Bad (Python):**
+**Detection signal:** an interface or ABC whose implementers leave methods
+empty, `pass` them, or raise `NotImplementedError` — they are forced to depend
+on methods they don't use.
+
+**Fix:** split the fat interface into role-specific interfaces; each implementer
+composes only the ones that apply.
 
 ```python
+# ❌ BAD — Robot forced to implement methods it cannot support
 class Worker(ABC):
     @abstractmethod
     def work(self): ...
@@ -208,11 +271,8 @@ class Robot(Worker):
     def work(self): ...
     def eat(self): raise NotImplementedError('robots do not eat')
     def sleep(self): raise NotImplementedError('robots do not sleep')
-```
 
-**Good (Python):**
-
-```python
+# ✅ GOOD — narrow interfaces; implement only what applies
 class Workable(ABC):
     @abstractmethod
     def work(self): ...
@@ -229,50 +289,27 @@ class Robot(Workable):
     def work(self): ...
 ```
 
-**Bad (TypeScript):**
-
-```typescript
-interface Worker {
-  work(): void;
-  eat(): void;   // robots can't eat — forced to implement a no-op
-  sleep(): void; // robots can't sleep
-}
-class Robot implements Worker {
-  work() { ... }
-  eat() { throw new Error('robots do not eat'); }
-  sleep() { throw new Error('robots do not sleep'); }
-}
-```
-
-**Good (TypeScript):**
-
-```typescript
-interface Workable  { work(): void; }
-interface Eatable   { eat(): void; }
-interface Sleepable { sleep(): void; }
-
-class Human implements Workable, Eatable, Sleepable { ... }
-class Robot implements Workable { work() { ... } }
-```
-
 ### D — Dependency Inversion Principle
 
 > Depend on abstractions, not concretions
 
-**Bad (Python):**
+**Detection signal:** a class that constructs a concrete collaborator
+(`MySQLDatabase()`, `new ConcreteRepo()`) inside its constructor or methods
+instead of receiving an abstraction.
+
+**Fix:** depend on an interface / `Protocol` and inject the concrete
+implementation through the constructor.
 
 ```python
+# ❌ BAD — hard dependency on a concretion
 class OrderService:
     def __init__(self):
-        self.db = MySQLDatabase()  # hard dependency on a concretion
+        self.db = MySQLDatabase()
 
     def save_order(self, order):
         self.db.save(order)
-```
 
-**Good (Python):**
-
-```python
+# ✅ GOOD — depend on an abstraction; caller injects the implementation
 class Database(Protocol):              # abstraction (interface)
     def save(self, entity) -> None: ...
 
@@ -288,152 +325,38 @@ service = OrderService(db=MySQLDatabase())
 service = OrderService(db=InMemoryDatabase())  # for tests
 ```
 
-**Bad (TypeScript):**
-
-```typescript
-class OrderService {
-  private db = new MySQLDatabase(); // hard dependency on a concretion
-
-  saveOrder(order: Order) {
-    this.db.save(order);
-  }
-}
-```
-
-**Good (TypeScript):**
-
-```typescript
-interface Database {
-  save(entity: unknown): void;
-}
-
-class OrderService {
-  constructor(private db: Database) {} // depends on abstraction
-
-  saveOrder(order: Order) {
-    this.db.save(order);
-  }
-}
-
-// Caller injects whichever impl they want:
-const service = new OrderService(new MySQLDatabase());
-const testService = new OrderService(new InMemoryDatabase()); // for tests
-```
-
 ---
 
-## Component Cohesion Principles
+## Acyclic Dependencies (ADP)
 
-- **REP** (Reuse/Release Equivalence): The granule of reuse is the granule of release
-- **CCP** (Common Closure): Gather into components those classes that change for the same reasons and at the same times
-- **CRP** (Common Reuse): Don't force users of a component to depend on things they don't need
+> Allow no cycles in the component dependency graph
 
----
+A component is a module or package — a unit imported as a whole. The import
+graph (node = module/package, edge = `import`) must be a directed **acyclic**
+graph.
 
-## Component Coupling Principles
+**Detection signal:** a cycle exists when, following `import` edges from
+component A, you can return to A.
 
-- **ADP** (Acyclic Dependencies): Allow no cycles in the component dependency graph
-- **SDP** (Stable Dependencies): Depend in the direction of stability
-- **SAP** (Stable Abstractions): A component should be as abstract as it is stable
+- Direct cycle — `A` imports `B` and `B` imports `A`
+- Indirect cycle — `A` → `B` → `C` → `A`
 
----
+**Fix:** break the cycle by inverting one edge (DIP — put an interface in the
+component that should not depend outward) or extract the shared code into a new
+component both sides depend on.
 
-## Architecture Rules
+**Enforcement:**
 
-### Boundaries
+- If a change you are making would *introduce* a cycle, restructure before
+  finishing — never commit a new cycle.
+- For a *pre-existing* cycle you encounter: refactor it if it touches files or
+  modules already in scope for the current task; otherwise add a
+  `TODO [ARCH:adp]` comment marking the cycle and surface it to the user.
 
-- Draw lines between things that change at **different rates and for different reasons**
-- Architectural boundaries should point dependencies toward **higher-level policy**
-- Database, UI, web, frameworks = **details** — keep them behind boundaries
-- The GUI is a detail. The web is a detail. The database is a detail.
+**Relationship to the Dependency Rule:** ADP constrains the *shape* of the graph
+(no cycles anywhere); the Dependency Rule constrains edge *direction* against the
+layer hierarchy. A lone inner → outer import breaks the Dependency Rule without
+forming a cycle, so run both checks.
 
-### Keeping Options Open
-
-> "A good architect maximizes the number of decisions not made."
-
-- Defer decisions about databases, web servers, frameworks as long as possible
-- Good architecture allows you to defer framework choice until much later
-
-### The Main Sequence
-
-Components should plot near the line connecting (I=1, A=0) and (I=0, A=1):
-
-- **Zone of Pain** (0,0): Stable + Concrete = rigid, hard to change
-- **Zone of Uselessness** (1,1): Unstable + Abstract = useless
-- Target: balance abstractness with stability
-
----
-
-## Clean Architecture Layers
-
-```text
-Entities          ← Enterprise Business Rules (most stable)
-Use Cases         ← Application Business Rules
-Interface Adapters← Controllers, Presenters, Gateways
-Frameworks/Drivers← Web, DB, UI (most volatile)
-```
-
-**Rules for each layer:**
-
-- **Entities**: Encapsulate critical business rules; no knowledge of outer layers
-- **Use Cases**: Application-specific rules; unaffected by UI/DB changes
-- **Interface Adapters**: Convert data formats between use cases and external agencies
-- **Frameworks/Drivers**: All the details go here
-
----
-
-## Screaming Architecture
-
-- Your architecture should **scream the business domain**, not the framework
-- "When looking at the top-level structure, it should scream 'Health Care System' not 'Rails'"
-- Frameworks are tools, not architectures
-
----
-
-## Testing Rules
-
-- Tests follow the **Dependency Rule** — they are the outermost circle
-- Nothing in the system depends on tests
-- Fragile Tests Problem = tests coupled to volatile UI or structure
-- Create a **Testing API** that lets you bypass UI to test business rules directly
-- Design for testability: "Don't depend on volatile things"
-
----
-
-## Humble Object Pattern
-
-Split behaviors into:
-
-- **Humble object**: Hard-to-test behaviors (Views, DB implementations)
-- **Testable object**: Easy-to-test behaviors (Presenters, Interactors)
-
-Applied at: Presenter/View, Database Gateways, Service Listeners
-
----
-
-## Service Architecture Rules
-
-- Services do **not** automatically define architecture
-- Services that simply separate behaviors are "expensive function calls"
-- Services can be coupled by **shared data** — the decoupling is often illusory
-- Architectural boundaries run **through** services, not between them
-
----
-
-## Key Heuristics
-
-1. **Only the way to go fast is to go well** — messy code is always slower, even short-term
-2. **Making messes is always slower than staying clean**, at every time scale
-3. **A good architecture leaves options open** — defer irreversible decisions
-4. **If component A should be protected from B, then B should depend on A**
-5. **Don't marry a framework** — treat it as a plugin to your core
-6. **The database is not the data model** — separate them
-
----
-
-## Practical Architecture Decisions (from "The Missing Chapter")
-
-- Prefer **package by component** over package by layer — bundle business logic + persistence behind a clean interface
-- Use **access modifiers** (package-private, internal) to enforce architectural boundaries at compile time
-- Making all types `public` collapses all four code organization styles into the same flat architecture
-- Use the **compiler to enforce** your architecture, not just discipline and code reviews
+**Tooling:** `import-linter` / `pydeps` (Python); `madge --circular` or ESLint
+`import/no-cycle` (TypeScript).
