@@ -10,9 +10,23 @@ mechanically verifiable rules are kept here.
 
 > Source code dependencies must point only inward, toward higher-level policy
 
-The four layers, outermost to innermost:
-Frameworks/Drivers → Interface Adapters → Use Cases → Entities. An inner layer
-must know nothing about any outer layer.
+The four layers run from Entities (innermost, most stable) outward to
+Frameworks/Drivers (outermost, most volatile). An inner layer must know nothing
+about any outer layer.
+
+```text
+Entities          ← Enterprise Business Rules (most stable)
+Use Cases         ← Application Business Rules
+Interface Adapters← Controllers, Presenters, Gateways
+Frameworks/Drivers← Web, DB, UI (most volatile)
+```
+
+**How to classify a module** (needed for the detection signal below):
+
+- **Entities** — domain types and business rules; import no other layer
+- **Use Cases** — application workflows; import Entities only
+- **Interface Adapters** — controllers, presenters, gateways, ORM models
+- **Frameworks/Drivers** — web framework, DB driver, UI code
 
 **Detection signal:** classify each module into a layer, then inspect its
 imports. A violation is any `import` edge pointing from an inner layer to an
@@ -278,21 +292,3 @@ forming a cycle, so run both checks.
 
 **Tooling:** `import-linter` / `pydeps` (Python); `madge --circular` or ESLint
 `import/no-cycle` (TypeScript).
-
----
-
-## Clean Architecture Layers
-
-```text
-Entities          ← Enterprise Business Rules (most stable)
-Use Cases         ← Application Business Rules
-Interface Adapters← Controllers, Presenters, Gateways
-Frameworks/Drivers← Web, DB, UI (most volatile)
-```
-
-**Rules for each layer:**
-
-- **Entities**: Encapsulate critical business rules; no knowledge of outer layers
-- **Use Cases**: Application-specific rules; unaffected by UI/DB changes
-- **Interface Adapters**: Convert data formats between use cases and external agencies
-- **Frameworks/Drivers**: All the details go here
