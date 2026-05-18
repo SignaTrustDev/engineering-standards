@@ -1,8 +1,6 @@
-# Clean Architecture Rules — Extracted from Robert C. Martin
+# Clean Architecture Rules
 
 Enforceable architecture rules — each one can be checked against concrete code.
-Advisory design philosophy from *Clean Architecture* has been removed; only
-mechanically verifiable rules are kept here.
 
 ---
 
