@@ -21,10 +21,10 @@ repository is **referenced from a project's CLAUDE.md**.
 - `CLEAN-CODE.md` — do not change rule numbering; keeps rule text only. Code examples live in
   `examples/clean-code/py.md` and `examples/clean-code/ts.md`, keyed by rule number (`## Rule N`).
   When you add or change a rule, update the matching `## Rule N` section in both example files.
-- `CLEAN-ARCHITECTURE.md` — keeps principle text only; layer diagram must stay intact. SOLID code
-  examples live in `examples/clean-architecture/py.md` and `examples/clean-architecture/ts.md`,
-  keyed by principle letter (`## S`, `## O`, …). When you add or change a principle, update the
-  matching section in both example files.
+- `CLEAN-ARCHITECTURE.md` — layer diagram must stay intact. Each SOLID principle has a Python
+  example inline; the TypeScript equivalents live in `examples/clean-architecture/ts.md`, keyed by
+  principle letter (`## S`, `## O`, …). When you add or change a principle, update both the inline
+  Python example and the TypeScript file.
 
 ### Adding a New Pattern
 
