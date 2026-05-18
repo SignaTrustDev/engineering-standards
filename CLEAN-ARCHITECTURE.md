@@ -8,11 +8,37 @@ mechanically verifiable rules are kept here.
 
 ## The Dependency Rule
 
-**The most important rule in the book:**
+> Source code dependencies must point only inward, toward higher-level policy
 
-- Source code dependencies must **point only inward**, toward higher-level policies
-- Nothing in an inner circle can know anything about something in an outer circle
-- Layers from outside-in: Frameworks/Drivers → Interface Adapters → Use Cases → Entities
+The four layers, outermost to innermost:
+Frameworks/Drivers → Interface Adapters → Use Cases → Entities. An inner layer
+must know nothing about any outer layer.
+
+**Detection signal:** classify each module into a layer, then inspect its
+imports. A violation is any `import` edge pointing from an inner layer to an
+outer layer.
+
+- `entities/` importing anything in `use_cases/`, `adapters/`, or `frameworks/`
+- `use_cases/` importing `adapters/` or `frameworks/`
+- A framework type (ORM model, HTTP request, UI widget) referenced inside an
+  entity or use case
+
+**Fix:** invert the dependency (DIP) — declare an interface in the inner layer
+and have the outer layer implement it — or move the misplaced code to the layer
+it belongs in.
+
+**Enforcement:**
+
+- If a change you are making would *introduce* an inner → outer import,
+  restructure before finishing — never commit one.
+- For a *pre-existing* violation you encounter: refactor it if it touches files
+  or modules already in scope for the current task; otherwise add a
+  `TODO [ARCH:dependency-rule]` comment and surface it to the user.
+
+**Relationship to ADP:** the Dependency Rule constrains edge *direction* against
+the layer hierarchy; ADP constrains the *shape* of the whole graph (no cycles).
+Obeying the Dependency Rule rules out inter-layer cycles, but not intra-layer
+cycles — the two checks are complementary, not redundant.
 
 ---
 
@@ -82,6 +108,11 @@ component both sides depend on.
 - For a *pre-existing* cycle you encounter: refactor it if it touches files or
   modules already in scope for the current task; otherwise add a
   `TODO [ARCH:adp]` comment marking the cycle and surface it to the user.
+
+**Relationship to the Dependency Rule:** ADP constrains the *shape* of the graph
+(no cycles anywhere); the Dependency Rule constrains edge *direction* against the
+layer hierarchy. A lone inner → outer import breaks the Dependency Rule without
+forming a cycle, so run both checks.
 
 **Tooling:** `import-linter` / `pydeps` (Python); `madge --circular` or ESLint
 `import/no-cycle` (TypeScript).
