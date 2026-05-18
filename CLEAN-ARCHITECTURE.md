@@ -41,6 +41,76 @@ outer layer.
 and have the outer layer implement it — or move the misplaced code to the layer
 it belongs in.
 
+**Example — all four layers, every import pointing inward:**
+
+```python
+# ═══ entities/order.py ─ innermost layer; imports NO other layer ═══
+from dataclasses import dataclass
+
+@dataclass
+class Order:
+    id: str
+    total: float
+
+    def is_free(self) -> bool:        # enterprise business rule
+        return self.total == 0
+
+
+# ═══ use_cases/place_order.py ─ imports Entities only ═══
+from typing import Protocol
+from entities.order import Order
+
+class OrderRepository(Protocol):      # abstraction defined in the INNER layer
+    def save(self, order: Order) -> None: ...
+
+class PlaceOrder:
+    def __init__(self, repo: OrderRepository) -> None:
+        self._repo = repo
+
+    def execute(self, order: Order) -> None:
+        self._repo.save(order)
+
+
+# ═══ interface_adapters/order.py ─ imports Use Cases + Entities (inward) ═══
+from entities.order import Order
+from use_cases.place_order import OrderRepository, PlaceOrder
+
+class SqlOrderRepository(OrderRepository):   # implements the inward abstraction
+    def __init__(self, connection) -> None:  # driver is INJECTED, not imported
+        self._conn = connection
+
+    def save(self, order: Order) -> None:
+        self._conn.execute(
+            "INSERT INTO orders (id, total) VALUES (?, ?)", order.id, order.total)
+
+class OrderController:
+    def __init__(self, place_order: PlaceOrder) -> None:
+        self._place_order = place_order
+
+    def handle(self, body: dict) -> None:
+        self._place_order.execute(Order(id=body["id"], total=body["total"]))
+
+
+# ═══ frameworks_drivers/main.py ─ outermost; imports EVERYTHING inward ═══
+import sqlite3
+from interface_adapters.order import SqlOrderRepository, OrderController
+from use_cases.place_order import PlaceOrder
+
+connection = sqlite3.connect("orders.db")          # the DB driver — a detail
+controller = OrderController(PlaceOrder(SqlOrderRepository(connection)))
+# app.post("/orders", lambda req: controller.handle(req.json))  # web — a detail
+```
+
+Two things to notice:
+
+- **DIP twist** — `SqlOrderRepository` (Interface Adapters) implements
+  `OrderRepository`, an abstraction *defined in* `use_cases`. The SQL detail
+  depends inward on the use case's interface; the use case never knows SQL
+  exists.
+- **No inner → outer import** — the repository never imports the `sqlite3`
+  driver. The composition root in `frameworks_drivers/` creates the connection
+  and injects it, keeping the adapter from reaching outward.
+
 **Enforcement:**
 
 - If a change you are making would *introduce* an inner → outer import,
