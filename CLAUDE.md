@@ -76,13 +76,13 @@ add a structured TODO comment at the relevant location:
 ```typescript
 // TODO [PATTERN:strategy]: Replace switch-on-type with Strategy pattern.
 // Each payment provider should be a ConcreteStrategy implementing PaymentGateway.
-// Reference: ~/engineering-standards/patterns/behavioral/strategy.md
+// Reference: patterns/behavioral/strategy.md (in engineering-standards repo)
 ```
 
 ```python
 # TODO [PATTERN:factory-method]: Hard-coded `new EmailNotifier()` should go behind
 # a factory method so callers depend on the Notifier interface, not the concrete class.
-# Reference: ~/engineering-standards/patterns/creational/factory-method.md
+# Reference: patterns/creational/factory-method.md (in engineering-standards repo)
 ```
 
 Rules for TODOs:
@@ -135,9 +135,11 @@ Install with: `ln -s ~/engineering-standards/skills/<name>.md ~/.claude/commands
 
 ## Reference Paths
 
+Paths below are relative to the root of the engineering-standards repository.
+
 | Resource | Location |
 |---|---|
-| Clean Code rules | `~/engineering-standards/CLEAN-CODE.md` |
-| Clean Architecture rules | `~/engineering-standards/CLEAN-ARCHITECTURE.md` |
-| Pattern index + decision tree | `~/engineering-standards/patterns/README.md` |
-| Individual patterns | `~/engineering-standards/patterns/<category>/<name>.md` |
+| Clean Code rules | `CLEAN-CODE.md` |
+| Clean Architecture rules | `CLEAN-ARCHITECTURE.md` |
+| Pattern index + decision tree | `patterns/README.md` |
+| Individual patterns | `patterns/<category>/<name>.md` |

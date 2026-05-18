@@ -4,7 +4,8 @@ Full refactor pass on the current file: fix pattern violations, apply clean code
 and correct architecture boundary issues — in the right order.
 
 **Usage:**
-```
+
+```bash
 /refactor
 /refactor src/lib/orderService.ts
 ```

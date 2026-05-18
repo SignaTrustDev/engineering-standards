@@ -3,7 +3,8 @@
 Verify that a file respects Clean Architecture layer boundaries (the Dependency Rule).
 
 **Usage:**
-```
+
+```bash
 /architecture-check
 /architecture-check src/lib/orderService.ts
 /architecture-check src/app/api/orders/route.ts
