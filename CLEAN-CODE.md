@@ -210,22 +210,6 @@ Don't introduce abstractions for hypothetical future needs. Three similar lines 
 
 ---
 
-## TypeScript-Specific Clean Code
-
-*(Rules 33–34 are TypeScript-only; examples appear in [`examples/clean-code/ts.md`](examples/clean-code/ts.md) only.)*
-
-### 33. Prefer discriminated unions over boolean flags
-
-Boolean flags multiply ambiguous states. Discriminated unions make every state explicit and exhaustively checkable.
-
----
-
-### 34. Use `unknown` over `any` — force explicit narrowing
-
-`any` disables the type checker entirely. `unknown` requires the caller to prove the type before using the value.
-
----
-
 ## Smells and Heuristics (Reference)
 
 A complete list of Martin's named smells and heuristics. Rules with full examples above are cross-referenced. Use this list as a final checklist when reviewing a file.
@@ -288,11 +272,11 @@ A complete list of Martin's named smells and heuristics. Rules with full example
 | G26 | Be Precise — vague types, ambiguous returns | Use the most specific type; be explicit about failure |
 | G27 | Structure Over Convention — naming conventions that can be violated | Enforce via types and compiler, not just naming |
 | G28 | Encapsulate Conditionals — `if (timer.hasExpired() && !timer.isRecurrent())` | Extract to `if (shouldBeDeleted(timer))` |
-| G29 | Avoid Negative Conditionals | See **Rule 33** |
+| G29 | Avoid Negative Conditionals | Rephrase as a positive conditional — it reads more directly |
 | G30 | Functions Should Do One Thing | See **Rule 7** |
 | G31 | Hidden Temporal Couplings — functions must be called in a specific order, but nothing enforces it | Chain return values so out-of-order calls are impossible |
 | G32 | Don't Be Arbitrary — code structure that has no apparent reason | Document the reason or restructure |
-| G33 | Encapsulate Boundary Conditions — `+1` and `-1` scattered everywhere | See **Rule 34** |
+| G33 | Encapsulate Boundary Conditions — `+1` and `-1` scattered everywhere | Wrap boundary arithmetic in a named function or constant |
 | G34 | Functions Should Descend Only One Level of Abstraction | See **Rule 8** (One Level of Abstraction) |
 | G35 | Keep Configurable Data at High Levels | See **Rule 35** |
 | G36 | Avoid Transitive Navigation (Train Wrecks) — `a.getB().getC()` | See **Rule 19** (Law of Demeter) |
@@ -317,7 +301,7 @@ A complete list of Martin's named smells and heuristics. Rules with full example
 | T2 | Use a Coverage Tool | Uncovered lines are untested assumptions |
 | T3 | Don't Skip Trivial Tests — they document behavior cheaply | Write them |
 | T4 | An Ignored Test Is a Question about an Ambiguity | Resolve the ambiguity; then either delete or enable the test |
-| T5 | Test Boundary Conditions | See **Rule 34** (Encapsulate Boundary Conditions) |
+| T5 | Test Boundary Conditions | Write a test for every boundary condition (see **G33**) |
 | T6 | Exhaustively Test Near Bugs — where you find one bug, look for more | Write tests for all neighboring behavior |
 | T7 | Patterns of Failure Are Revealing — tests that fail together hint at a shared cause | Read the pattern; don't just fix individual failures |
 | T8 | Test Coverage Patterns Can Be Revealing — untested lines that are always executed together | Consider extracting a unit |

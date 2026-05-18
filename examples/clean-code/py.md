@@ -653,10 +653,3 @@ class FormalGreeting(GreetingStrategy):
 def greet(name: str) -> str:
     return f"Good day, {name}."
 ```
-
----
-
-## Rules 33–34 — TypeScript-specific
-
-Rules 33 (discriminated unions) and 34 (`unknown` over `any`) are TypeScript-only.
-See [`ts.md`](ts.md#rule-33--prefer-discriminated-unions-over-boolean-flags).
