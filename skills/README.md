@@ -37,9 +37,12 @@ Once symlinked, the skills are available in **every project** via Claude Code.
 Review a file against the full engineering standards suite.
 
 **What it checks:**
+
+
 1. GoF pattern opportunities and misuses
 2. All 40 CLEAN-CODE.md rules (function size, naming, single responsibility, etc.)
 3. Clean Architecture layer boundary violations (Dependency Rule)
+
 
 **Output:** Prioritised violation report grouped by severity (🔴 High / 🟡 Medium / 🟢 Low),
 with rule references and suggested fixes.
@@ -56,11 +59,14 @@ with rule references and suggested fixes.
 Apply a named GoF design pattern to the current file or selection.
 
 **What it does:**
+
+
 1. Reads the pattern file from `~/engineering-standards/patterns/`
 2. Maps the pattern's participants to the existing code
 3. Explains why the pattern fits (or doesn't) before making any changes
 4. Produces the refactored code with all participants in place
 5. Adds `TODO [PATTERN:name]` comments at any touch points in other files
+
 
 **Available pattern names:**
 
@@ -90,9 +96,12 @@ Apply a named GoF design pattern to the current file or selection.
 Verify that a file respects Clean Architecture layer boundaries.
 
 **What it checks:**
+
+
 - Detects which layer the file belongs to (Entity, Use Case, Interface Adapter, Framework/Driver)
 - Scans all imports and classifies each as valid or a Dependency Rule violation
 - Suggests the interface/port that should replace each concrete cross-layer import
+
 
 **Output:** List of clean imports + violations with specific fix instructions.
 
@@ -110,11 +119,14 @@ Full refactor pass on a file — the highest-level skill. Combines all three oth
 structured multi-phase workflow.
 
 **Phases:**
+
+
 1. Honour existing `TODO [PATTERN:*]` and `TODO [ARCH]` comments
 2. Detect and apply new pattern opportunities
 3. Fix architecture boundary violations
 4. Apply Clean Code pass (function size, naming, guard clauses, magic numbers)
 5. Output complete refactored file + diff summary
+
 
 Use this when you want a comprehensive clean-up, not just one specific fix.
 
@@ -142,6 +154,8 @@ structured comment rather than making an unrequested change:
 ```
 
 These TODOs are:
+
+
 - Searchable across the codebase with `grep "TODO \[PATTERN"` or `grep "TODO \[ARCH"`
 - Automatically processed by `/refactor` (Phase 1)
 - Addressable one at a time with `/apply-pattern <name>`
@@ -158,6 +172,7 @@ Add this block to any project's `CLAUDE.md` to activate all standards and auto-d
 All code must comply with the organisation engineering standards.
 
 Read and apply the following on every task:
+
 
 - **CLAUDE.md (main rules):** `~/engineering-standards/CLAUDE.md`
 - **Clean Code:** `~/engineering-standards/CLEAN-CODE.md`

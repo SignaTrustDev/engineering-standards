@@ -3,7 +3,8 @@
 Apply a named GoF design pattern to the current file or selection.
 
 **Usage:**
-```
+
+```bash
 /apply-pattern strategy
 /apply-pattern factory-method
 /apply-pattern observer src/lib/orderService.ts
