@@ -1,8 +1,8 @@
 # Clean Architecture Rules — Extracted from Robert C. Martin
 
-## Core Goal
-
-> "The goal of software architecture is to minimize the human resources required to build and maintain the required system."
+Enforceable architecture rules — each one can be checked against concrete code.
+Advisory design philosophy from *Clean Architecture* has been removed; only
+mechanically verifiable rules are kept here.
 
 ---
 
@@ -57,45 +57,14 @@
 
 ---
 
-## Component Cohesion Principles
+## Acyclic Dependencies (ADP)
 
-- **REP** (Reuse/Release Equivalence): The granule of reuse is the granule of release
-- **CCP** (Common Closure): Gather into components those classes that change for the same reasons and at the same times
-- **CRP** (Common Reuse): Don't force users of a component to depend on things they don't need
+> Allow no cycles in the component dependency graph
 
----
-
-## Component Coupling Principles
-
-- **ADP** (Acyclic Dependencies): Allow no cycles in the component dependency graph
-- **SDP** (Stable Dependencies): Depend in the direction of stability
-- **SAP** (Stable Abstractions): A component should be as abstract as it is stable
-
----
-
-## Architecture Rules
-
-### Boundaries
-
-- Draw lines between things that change at **different rates and for different reasons**
-- Architectural boundaries should point dependencies toward **higher-level policy**
-- Database, UI, web, frameworks = **details** — keep them behind boundaries
-- The GUI is a detail. The web is a detail. The database is a detail.
-
-### Keeping Options Open
-
-> "A good architect maximizes the number of decisions not made."
-
-- Defer decisions about databases, web servers, frameworks as long as possible
-- Good architecture allows you to defer framework choice until much later
-
-### The Main Sequence
-
-Components should plot near the line connecting (I=1, A=0) and (I=0, A=1):
-
-- **Zone of Pain** (0,0): Stable + Concrete = rigid, hard to change
-- **Zone of Uselessness** (1,1): Unstable + Abstract = useless
-- Target: balance abstractness with stability
+- The component dependency graph must be a directed **acyclic** graph
+- If component A depends on B, B must not depend (directly or transitively) back on A
+- Break a cycle by inverting one dependency (DIP) or extracting a new component
+  that both sides depend on
 
 ---
 
@@ -114,61 +83,3 @@ Frameworks/Drivers← Web, DB, UI (most volatile)
 - **Use Cases**: Application-specific rules; unaffected by UI/DB changes
 - **Interface Adapters**: Convert data formats between use cases and external agencies
 - **Frameworks/Drivers**: All the details go here
-
----
-
-## Screaming Architecture
-
-- Your architecture should **scream the business domain**, not the framework
-- "When looking at the top-level structure, it should scream 'Health Care System' not 'Rails'"
-- Frameworks are tools, not architectures
-
----
-
-## Testing Rules
-
-- Tests follow the **Dependency Rule** — they are the outermost circle
-- Nothing in the system depends on tests
-- Fragile Tests Problem = tests coupled to volatile UI or structure
-- Create a **Testing API** that lets you bypass UI to test business rules directly
-- Design for testability: "Don't depend on volatile things"
-
----
-
-## Humble Object Pattern
-
-Split behaviors into:
-
-- **Humble object**: Hard-to-test behaviors (Views, DB implementations)
-- **Testable object**: Easy-to-test behaviors (Presenters, Interactors)
-
-Applied at: Presenter/View, Database Gateways, Service Listeners
-
----
-
-## Service Architecture Rules
-
-- Services do **not** automatically define architecture
-- Services that simply separate behaviors are "expensive function calls"
-- Services can be coupled by **shared data** — the decoupling is often illusory
-- Architectural boundaries run **through** services, not between them
-
----
-
-## Key Heuristics
-
-1. **Only the way to go fast is to go well** — messy code is always slower, even short-term
-2. **Making messes is always slower than staying clean**, at every time scale
-3. **A good architecture leaves options open** — defer irreversible decisions
-4. **If component A should be protected from B, then B should depend on A**
-5. **Don't marry a framework** — treat it as a plugin to your core
-6. **The database is not the data model** — separate them
-
----
-
-## Practical Architecture Decisions (from "The Missing Chapter")
-
-- Prefer **package by component** over package by layer — bundle business logic + persistence behind a clean interface
-- Use **access modifiers** (package-private, internal) to enforce architectural boundaries at compile time
-- Making all types `public` collapses all four code organization styles into the same flat architecture
-- Use the **compiler to enforce** your architecture, not just discipline and code reviews
