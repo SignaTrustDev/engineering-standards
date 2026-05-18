@@ -61,10 +61,30 @@ mechanically verifiable rules are kept here.
 
 > Allow no cycles in the component dependency graph
 
-- The component dependency graph must be a directed **acyclic** graph
-- If component A depends on B, B must not depend (directly or transitively) back on A
-- Break a cycle by inverting one dependency (DIP) or extracting a new component
-  that both sides depend on
+A component is a module or package — a unit imported as a whole. The import
+graph (node = module/package, edge = `import`) must be a directed **acyclic**
+graph.
+
+**Detection signal:** a cycle exists when, following `import` edges from
+component A, you can return to A.
+
+- Direct cycle — `A` imports `B` and `B` imports `A`
+- Indirect cycle — `A` → `B` → `C` → `A`
+
+**Fix:** break the cycle by inverting one edge (DIP — put an interface in the
+component that should not depend outward) or extract the shared code into a new
+component both sides depend on.
+
+**Enforcement:**
+
+- If a change you are making would *introduce* a cycle, restructure before
+  finishing — never commit a new cycle.
+- For a *pre-existing* cycle you encounter: refactor it if it touches files or
+  modules already in scope for the current task; otherwise add a
+  `TODO [ARCH:adp]` comment marking the cycle and surface it to the user.
+
+**Tooling:** `import-linter` / `pydeps` (Python); `madge --circular` or ESLint
+`import/no-cycle` (TypeScript).
 
 ---
 
